@@ -3,40 +3,45 @@ const cheerio = require("cheerio")
 const url = 'https://k12cs.org/framework-statements-by-grade-band/'
 const fs = require('fs')
 
+// save to JSON file
 const storeData = (data, path) => {
     try {
-        fs.writeFileSync(path, JSON.stringify(data))
+        fs.writeFileSync(path, JSON.stringify(data, null, 4))
     } catch (err) {
         console.error(err)
     }
 }
+
+// get data from website
 const fetchData = async () => {
     const result = await axios.get(url);
     // console.log(result)
     return cheerio.load(result.data);
 };
 
+//get the practices from the accordions on teh website
 const getPracticeStatements = (data) => {
     const arrayOfPracticeStatements = data('.accordions').toArray()
     const practiceStatements = arrayOfPracticeStatements.map((singlePracticeStatement, i) => {
         const data = cheerio.load(singlePracticeStatement)
+        const statement = data('.accordions-head-title').text()
+        const progression = data('.accordion-content').children().text()
         return ({
             practiceStatementNumber: i + 1,
-            practiceStatement: "asdfasf"
+            practiceStatement: statement,
+            progression: progression
         })
     })
-    // console.log(practiceData)
     return practiceStatements
 }
 
+// main app
 const app = async () => {
-    const $ = await fetchData()
-    const practices = cheerio.load($('#practices').html())
-    const titles = practices('.wpsm_panel-title').text()
-    // console.log(titles)
-
+    const siteData = await fetchData()
+    const practices = cheerio.load(siteData('#practices').html())
     const array = practices('.wpsm_panel').toArray()
-    const test = array.map((singlePractice, i) => {
+    //loop over each of the *7* practices
+    const allData = array.map((singlePractice, i) => {
         const practiceData = cheerio.load(singlePractice)
         const title = practiceData('.wpsm_panel-title').text()
         const overview = practiceData('.wpsm_panel-body:first').children().first().text().substring(1)
@@ -50,8 +55,7 @@ const app = async () => {
     })
 
 
-    // console.log(test)
-    storeData(test, "data.json")
+    storeData(allData, "data.json")
 }
 
 app();
