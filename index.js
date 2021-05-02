@@ -45,7 +45,9 @@ const app = async () => {
         const practiceData = cheerio.load(singlePractice)
         const title = practiceData('.wpsm_panel-title').text()
         const overview = practiceData('.wpsm_panel-body:first').children().first().text().substring(1)
+        //get the nested practices
         const practiceStatements = getPracticeStatements(practiceData)
+        //return this practice's data
         return {
             practiceNumber: i + 1,
             corePractice: title.substring(8),
@@ -54,7 +56,7 @@ const app = async () => {
         }
     })
 
-
+    //save it to a json file
     storeData(allData, "data.json")
 }
 
